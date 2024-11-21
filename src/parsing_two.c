@@ -6,11 +6,27 @@
 /*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/18 13:31:03 by alvapari          #+#    #+#             */
-/*   Updated: 2024/11/20 23:22:31 by alvapari         ###   ########.fr       */
+/*   Updated: 2024/11/21 12:53:19 by alvapari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
+
+/*esta función crea una array de strings donde estarán los lexemas*/
+void	ft_create_arr_lexem(char *str, t_parsing *prs)
+{
+	prs->arr_lexems = malloc(sizeof(char *) * (prs->how_much + 1));
+	if (!prs->arr_lexems)
+	{
+		printf("The array has not been created (Error).");
+		exit(0);
+	}
+	prs->arr_lexems[prs->how_much] = 0;
+	prs->count = 0;
+	prs->flag = 0;
+	prs->reject = 0;
+	ft_string_by_string(str, prs);
+}
 
 /*esta función va iterando el data.input para ir diciendo dónde hay que
 "splitear"*/
@@ -86,22 +102,6 @@ void	ft_if_doub_quote_split_strings(t_parsing *prs, char *str)
 	else if (prs->flag == DOUB_QUOT)
 		prs->flag = 0;
 	if (prs->flag == ONE_QUOT)
-	{
-		prs->arr_lexems[prs->index_arr][prs->cnt_new_str] \
-		= str[prs->init_index];
-		prs->cnt_new_str++;
-	}
-}
-
-/*esta función es una extensión de ft_split_strings: si es una comill de
-apertura o de cierre no copia, en cualquier otro caso, sí copia */
-void	ft_if_single_quote_split_strings(t_parsing *prs, char *str)
-{
-	if (prs->flag == 0)
-		prs->flag = ONE_QUOT;
-	else if (prs->flag == ONE_QUOT)
-		prs->flag = 0;
-	if (prs->flag == DOUB_QUOT)
 	{
 		prs->arr_lexems[prs->index_arr][prs->cnt_new_str] \
 		= str[prs->init_index];

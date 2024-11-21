@@ -6,7 +6,7 @@
 /*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/13 00:02:28 by alvapari          #+#    #+#             */
-/*   Updated: 2024/11/20 23:19:44 by alvapari         ###   ########.fr       */
+/*   Updated: 2024/11/21 13:16:43 by alvapari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,25 @@ void	ft_init_parsing_struc(t_parsing *prs)
 	prs->index_arr = 0;
 	prs->cnt_new_str = 0;
 	prs->len = 0;
+	prs->flag_space = 'g';
+}
+
+// esta función comprueba si el input está compuesto solo por espacios, en tal
+// caso volveremos a reboot data, también pone el tope en el último carácter
+// válido del input (cualquier carácter menos un espacio).
+void	ft_parsing(t_data *data)
+{
+	int	top;
+
+	top = ft_strlen(data->input) - 1;
+	if (ft_only_spaces(data->input) == 1)
+		ft_print_prs_err('s', &data->prs);
+	else
+	{
+		while (data->input[top] == ' ')
+			top--;
+		ft_start_parsing(data->input, &data->prs, top);
+	}
 }
 
 /*Esta función cuenta cuántos lexemas tiene la entrada y, además, cuenta
@@ -32,9 +51,9 @@ void	ft_init_parsing_struc(t_parsing *prs)
 	comillas que cierren y que abren estados, y los espacios entre lexemas
 	o los espacios antes del primer lexema. Al saber los carácteres
 	prescindibles, podremos alocar la memoria correcta posteriormente.*/
-void	ft_start_parsing(char *str, t_parsing *prs)
+void	ft_start_parsing(char *str, t_parsing *prs, int top)
 {
-	while (str[prs->count] != '\0')
+	while (str[prs->count] != '\0' && prs->count <= top)
 	{
 		if (prs->flag == 0 && (str[prs->count] == 32
 				|| str[prs->count] == '\t'))
@@ -96,20 +115,4 @@ void	ft_if_single_quote(t_parsing *prs)
 		prs->flag = 0;
 		prs->reject++;
 	}
-}
-
-/*esta función crea una array de strings donde estarán los lexemas*/
-void	ft_create_arr_lexem(char *str, t_parsing *prs)
-{
-	prs->arr_lexems = malloc(sizeof(char *) * (prs->how_much + 1));
-	if (!prs->arr_lexems)
-	{
-		printf("The array has not been created (Error).");
-		exit(0);
-	}
-	prs->arr_lexems[prs->how_much] = 0;
-	prs->count = 0;
-	prs->flag = 0;
-	prs->reject = 0;
-	ft_string_by_string(str, prs);
 }

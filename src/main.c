@@ -1,6 +1,6 @@
 #include "../include/minishell.h"
 
-int	only_spaces(char *input)
+int	ft_only_spaces(char *input)
 {
 	int	i;
 
@@ -16,7 +16,7 @@ int	only_spaces(char *input)
 
 void	history(char *input)
 {
-	if (input != NULL && ft_strlen(input) != 0 && only_spaces(input) == 0)
+	if (input != NULL && ft_strlen(input) != 0 && ft_only_spaces(input) == 0)
 		add_history(input);
 }
 
@@ -34,14 +34,9 @@ void	init_data(t_data *data, char **env)
 	ft_init_parsing_struc(&data->prs);
 	//data-> pipe = NULL;
 }
-
 void    free_data(t_data *data)
 {
 	//Está por rellenar
-    if (data->input)
-		free(data->input);
-	if (data->prs.arr_lexems)
-		free_array(data->prs.arr_lexems);
 	if(data->env)
 		free_array(data->env);
 	if(data->array_var)
@@ -50,24 +45,29 @@ void    free_data(t_data *data)
 		free_cmd_list(data->cmd_list);
 	if(data->token_list)
 		free_token_list(data->token_list);
+    if (data->input)
+		free(data->input);
+	if (data->prs.arr_lexems)
+		free_array(data->prs.arr_lexems);
+	close_fds();
 }
-
 void reboot_data(t_data *data)
 {
 	if(data->input)
 		free(data->input);
-	if (data->prs.arr_lexems)
-		free_array(data->prs.arr_lexems);
 	if(data->cmd_list)
 		data->cmd_list = free_cmd_list(data->cmd_list);
 	if(data->token_list)
 		data->token_list = free_token_list(data->token_list);
+	if (data->prs.arr_lexems)
+		free_array(data->prs.arr_lexems);	
 	data->input = NULL;
 	data->cmd_list = NULL;
 	data->token_list = NULL;
 	data->exit_status = 0;
 	data->here_doc_counter = 0;
 	ft_init_parsing_struc(&data->prs);
+	close_fds();
 }
 
 void	ft_printf_proofs_split_prs(t_data data)
@@ -97,8 +97,8 @@ int	main(int argc, char** argv, char **env)
 		if (data.input == NULL)
 			break ;
 		history(data.input);
-		ft_start_parsing(data.input, &data.prs);
-		if(data.exit_status == 0)
+		ft_parsing(&data);
+		if(data.exit_status == 0 && data.prs.flag_space == 'g')
 		{
 			//prueba_ejecucion(&data);
 			ft_printf_proofs_split_prs(data);

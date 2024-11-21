@@ -81,6 +81,7 @@ typedef struct s_parsing
 	int					end_index;
 	int					cnt_new_str;
 	int					len;
+	char				flag_space;
 	t_data				*ptrdata;
 }						t_parsing;
 
@@ -152,7 +153,7 @@ void					update_fds_redirs(t_cmd *cmd_list);
 void					dup_fds_redirs(t_cmd *cmd);
 
 //MAIN
-int						only_spaces(char *input);
+int						ft_only_spaces(char *input);
 void					history(char *input);
 void					init_data(t_data *data, char **env);
 void					free_data(t_data *data);
@@ -166,8 +167,6 @@ void					multiple_cmd_case(t_data *data);
 void					signals(void);
 void					handle_ctrl_c(int signal);
 
-// PARSING
-void					parsing(t_data *data);
 
 // UTILS
 void					print_array(char **array);
@@ -190,7 +189,7 @@ void					child(t_cmd *cmd, int *fd_in, int *fd_out, t_data *data);
 void					prueba_ejecucion(t_data *data);
 int						is_a_builtin(t_cmd *cmd);
 void					exec_builtin(t_cmd *cmd);
-
+void					close_fds(void);
 ////BUILTINS
 // FT_ECHO
 int						has_variable(char *input);
@@ -222,7 +221,7 @@ void					exec_builtin(t_cmd *cmd);
 void					builtin_end(t_data *data, int error);
 
 // PARSING
-void    				ft_start_parsing(char *str, t_parsing *prs);
+void    				ft_start_parsing(char *str, t_parsing *prs, int top);
 void					ft_init_parsing_struc(t_parsing *prs);
 void				    ft_if_single_quote(t_parsing *prs);
 void 					ft_if_doub_quote(t_parsing *prs);
@@ -238,7 +237,7 @@ void    				ft_print_prs_err(char flag, t_parsing *prs);
 void					ft_move_counts(t_parsing	*prs);
 void					ft_string_by_string_aux(char *str, t_parsing *prs);
 void					ft_printf_proofs_split_prs(t_data data); /*Que NO se nos olvide quitar esto LOL*/
-
+void					ft_parsing(t_data *data);
 
 // PATH
 char					*get_path_line(char **env);
