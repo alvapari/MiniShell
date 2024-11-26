@@ -5,7 +5,7 @@ int	ft_only_spaces(char *input)
 	int	i;
 
 	i = 0;
-	while (input[i] != '\0')
+	while (input[i] != '\0' && input[i] != '\t')
 	{
 		if (input[i] != ' ')
 			return (0);
