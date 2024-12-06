@@ -1,0 +1,573 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing_one.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/13 00:02:28 by alvapari          #+#    #+#             */
+/*   Updated: 2024/12/06 17:17:11 by alvapari         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/minishell.h"
+
+// Esta función inicializa al estructura que vamos a necesitar para el parseo
+
+void	ft_init_parsing_struc(t_parsing *prs)
+{
+	prs->count = 0;
+	prs->how_much = 0;
+	prs->flag = 0;
+	prs->reject = 0;
+	prs->arr_lexems = NULL;
+	prs->init_index = 0;
+	prs->end_index = 0;
+	prs->index_arr = 0;
+	prs->cnt_new_str = 0;
+	prs->len = 0;
+	prs->flag_space = 'g';
+}
+
+// esta función comprueba si el input está compuesto solo por espacios, en tal
+// caso volveremos a reboot data, también pone el tope en el último carácter
+// válido del input (cualquier carácter menos un espacio).
+void	ft_parsing(t_data *data)
+{
+	int		top;
+	char	*patch_input;
+	int		len_patch;
+
+	len_patch = ft_len(data->input, 0) + ft_strlen(data->input);
+	patch_input = new_input(data->input, len_patch);
+	data->input = ft_memmove(data->input, patch_input, len_patch);
+	printf("a ver: data input %s\n", data->input);
+	free(patch_input);
+	top = ft_strlen(data->input) - 1;
+	if (ft_only_spaces(data->input) == 1)
+		ft_print_prs_err('s', &data->prs);
+	else
+	{
+		while (data->input[top] == ' ')
+			top--;
+		ft_start_parsing(data->input, &data->prs, top);
+	}
+}
+
+/*Esta función cuenta cuántos lexemas tiene la entrada y, además, cuenta
+	cuántos carácteres nos son prescindibles: nos son prescindibles las
+	comillas que cierren y que abren estados, y los espacios entre lexemas
+	o los espacios antes del primer lexema. Al saber los carácteres
+	prescindibles, podremos alocar la memoria correcta posteriormente.*/
+void	ft_start_parsing(char *str, t_parsing *prs, int top)
+{
+	while (str[prs->count] != '\0' && prs->count <= top)
+	{
+		if (prs->flag == 0 && (str[prs->count] == 32
+				|| str[prs->count] == '\t'))
+			prs->count++;
+		while (prs->flag == 0 && (str[prs->count] == 32
+				|| str[prs->count] == '\t'))
+		{
+			prs->count++;
+			prs->reject++;
+		}
+		if (str[prs->count] == DOUB_QUOT)
+			ft_if_doub_quote(prs);
+		if (str[prs->count] == ONE_QUOT)
+			ft_if_single_quote(prs);
+		if ((str[prs->count + 1] == 32 || str[prs->count + 1] == '\t'
+				|| str[prs->count + 1] == '\0') && prs->flag == 0)
+			prs->how_much++;
+		prs->count++;
+	}
+	if (prs->flag != 0)
+		ft_print_prs_err('u', prs);
+	else
+		ft_create_arr_lexem(prs->ptrdata->input, prs);
+}
+
+/*es una extensión de la función how_mux_lem:  cuando llegamos a las comillas,
+   si estamos en un estado libre (flag = 0) abrimos estado,
+   si estamos en estado abierto, lo cerramos,
+   si el estado está abierto pero por otro tipo de comillas no haremos nada,
+   es decir, trataremos a esas comillas como un carácter más*/
+void	ft_if_doub_quote(t_parsing *prs)
+{
+	if (prs->flag == 0)
+	{
+		prs->flag = DOUB_QUOT;
+		prs->reject++;
+	}
+	else if (prs->flag == DOUB_QUOT)
+	{
+		prs->flag = 0;
+		prs->reject++;
+	}
+}
+
+/*es una extensión de la función how_mux_lem:  cuando llegamos a las comillas,
+	si estamos en un estado libre (flag = 0) abrimos estado,
+	si estamos en estado abierto, lo cerramos,
+	si el estado está abierto pero por otro tipo de comillas no haremos nada,
+	es decir, trataremos a esas comillas como un carácter más*/
+void	ft_if_single_quote(t_parsing *prs)
+{
+	if (prs->flag == 0)
+	{
+		prs->flag = ONE_QUOT;
+		prs->reject++;
+	}
+	else if (prs->flag == ONE_QUOT)
+	{
+		prs->flag = 0;
+		prs->reject++;
+	}
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing_two.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/18 13:31:03 by alvapari          #+#    #+#             */
+/*   Updated: 2024/11/21 12:53:19 by alvapari         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/minishell.h"
+
+/*esta función crea una array de strings donde estarán los lexemas*/
+void	ft_create_arr_lexem(char *str, t_parsing *prs)
+{
+	prs->arr_lexems = malloc(sizeof(char *) * (prs->how_much + 1));
+	if (!prs->arr_lexems)
+	{
+		printf("The array has not been created (Error).");
+		exit(0);
+	}
+	prs->arr_lexems[prs->how_much] = 0;
+	prs->count = 0;
+	prs->flag = 0;
+	prs->reject = 0;
+	ft_string_by_string(str, prs);
+}
+
+/*esta función va iterando el data.input para ir diciendo dónde hay que
+"splitear"*/
+void	ft_string_by_string(char *str, t_parsing *prs)
+{
+	while (str[prs->count] != '\0' && prs->index_arr < prs->how_much)
+		ft_string_by_string_aux(str, prs);
+	prs->arr_lexems[prs->how_much] = 0;
+}
+
+void	ft_string_by_string_aux(char *str, t_parsing *prs)
+{
+	while (prs->flag == 0 && (str[prs->count] == 32 || str[prs->count] == '\t'))
+	{
+		prs->count++;
+		prs->init_index = prs->count;
+	}
+	if (str[prs->count] == DOUB_QUOT)
+		ft_if_doub_quote(prs);
+	if (str[prs->count] == ONE_QUOT)
+		ft_if_single_quote(prs);
+	if ((str[prs->count + 1] == 32 || str[prs->count + 1] == '\t'
+			|| str[prs->count + 1] == '\0') && prs->flag == 0)
+	{
+		prs->end_index = prs->count;
+		if (ft_if_lexem_only_doub_quotes(str, prs) == 1
+			|| ft_if_lexem_only_single_quotes(str, prs) == 1)
+			ft_create_a_space_lexem(prs);
+		else
+			ft_split_strings(str, prs);
+		prs->index_arr++;
+		prs->reject = 0;
+	}
+	prs->count++;
+}
+
+/*esta función va spliteando el data.input y va completando, string a
+string, la array de strings que habáimos inicialiado previamente*/
+void	ft_split_strings(char *str, t_parsing *prs)
+{
+	prs->cnt_new_str = 0;
+	prs->len = (prs->end_index - prs->init_index - prs->reject) + 2;
+	prs->arr_lexems[prs->index_arr] = malloc(sizeof(char) * prs->len);
+	if (!prs->arr_lexems[prs->index_arr])
+	{
+		printf("String has not been created (Error)");
+		exit(0);
+	}
+	while (prs->init_index <= prs->end_index)
+	{
+		if (str[prs->init_index] == DOUB_QUOT)
+			ft_if_doub_quote_split_strings(prs, str);
+		if (str[prs->init_index] == ONE_QUOT)
+			ft_if_single_quote_split_strings(prs, str);
+		if (str[prs->init_index] != ONE_QUOT
+			&& str[prs->init_index] != DOUB_QUOT)
+		{
+			prs->arr_lexems[prs->index_arr][prs->cnt_new_str] \
+			= str[prs->init_index];
+			prs->cnt_new_str++;
+		}
+		prs->init_index++;
+	}
+	prs->arr_lexems[prs->index_arr][prs->cnt_new_str] = '\0';
+}
+
+/*esta función es una extensión de ft_split_strings: si es una comilla de
+apertura o de cierre no copia, en cualquier otro caso, sí copia*/
+void	ft_if_doub_quote_split_strings(t_parsing *prs, char *str)
+{
+	if (prs->flag == 0)
+		prs->flag = DOUB_QUOT;
+	else if (prs->flag == DOUB_QUOT)
+		prs->flag = 0;
+	if (prs->flag == ONE_QUOT)
+	{
+		prs->arr_lexems[prs->index_arr][prs->cnt_new_str] \
+		= str[prs->init_index];
+		prs->cnt_new_str++;
+	}
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing_three.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/18 13:32:01 by alvapari          #+#    #+#             */
+/*   Updated: 2024/11/21 12:53:05 by alvapari         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/minishell.h"
+
+/*esta función es una extensión de ft_split_strings: si es una comill de
+apertura o de cierre no copia, en cualquier otro caso, sí copia */
+void	ft_if_single_quote_split_strings(t_parsing *prs, char *str)
+{
+	if (prs->flag == 0)
+		prs->flag = ONE_QUOT;
+	else if (prs->flag == ONE_QUOT)
+		prs->flag = 0;
+	if (prs->flag == DOUB_QUOT)
+	{
+		prs->arr_lexems[prs->index_arr][prs->cnt_new_str] \
+		= str[prs->init_index];
+		prs->cnt_new_str++;
+	}
+}
+
+/*esta función devuelve 1 o 0 en caso de que el lexema esté compuesto solo
+por comillas de un solo tipo: en ese caso deberemos llamar a otra función.*/
+int	ft_if_lexem_only_doub_quotes(char *str, t_parsing *prs)
+{
+	int	aux;
+
+	aux = prs->init_index;
+	while (aux <= prs->end_index)
+	{
+		if (str[aux] == DOUB_QUOT)
+			aux++;
+		else
+			return (2);
+	}
+	return (1);
+}
+
+/*esta función devuelve 1 o 0 en caso de que el lexema esté compuesto solo
+por comillas de un solo tipo: en ese caso deberemos llamar a otra función.*/
+int	ft_if_lexem_only_single_quotes(char *str, t_parsing *prs)
+{
+	int	aux;
+
+	aux = prs->init_index;
+	while (aux <= prs->end_index)
+	{
+		if (str[aux] == ONE_QUOT)
+			aux++;
+		else
+			return (2);
+	}
+	return (1);
+}
+
+/*esta función crea un lexema con solo un espacio y un carácter nulo*/
+void	ft_create_a_space_lexem(t_parsing *prs)
+{
+	int	len;
+
+	prs->cnt_new_str = 0;
+	len = 2;
+	prs->arr_lexems[prs->index_arr] = malloc(sizeof(char) * len);
+	if (!prs->arr_lexems[prs->index_arr])
+	{
+		printf("String has not been created (Error)");
+		exit(0);
+	}
+	prs->arr_lexems[prs->index_arr][0] = 32;
+	prs->arr_lexems[prs->index_arr][1] = '\0';
+}
+
+/*imprime errores y realiza un exit_status = 2*/
+void	ft_print_prs_err(char flag, t_parsing *prs)
+{
+	if (flag == 'u')
+	{
+		prs->ptrdata->exit_status = 2;
+		ft_putstr_fd("Minishell does not work with unclosed quotes\n", 2);
+	}
+	if (flag == 's')
+		prs->flag_space = 's';
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing_four.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/27 10:31:20 by alvapari          #+#    #+#             */
+/*   Updated: 2024/12/05 19:08:54 by alvapari         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/minishell.h"
+
+// esta función nos dirá si un carácter concreto (index) de una string está o
+// no está en estado de comillas. Si está FUERA de comillas devolverá 1, si
+// está dentro de comillas devolverá 0
+
+int	ft_is_spc_chr(char str)
+{
+	if (str == '>' || str == '<' || str == '|')
+		return (1);
+	return (0);
+}
+
+int	ft_tell_if_oq(char *str, int index, int i)
+{
+	int	flag;
+
+	flag = 0;
+	while (str[i] != '\0' && i <= index)
+	{
+		if (str[i] == DOUB_QUOT)
+		{
+			if (flag == 0)
+				flag = DOUB_QUOT;
+			else if (flag == DOUB_QUOT)
+				flag = 0;
+		}
+		if (str[i] == ONE_QUOT)
+		{
+			if (flag == 0)
+				flag = ONE_QUOT;
+			else if (flag == ONE_QUOT)
+				flag = 0;
+		}
+		if ((i == index) && flag == 0)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+int	ft_len(char *s, int k)
+{
+	int	i;
+	int	add;
+
+	k = 0;
+	i = 0;
+	add = 0;
+	while (s[i] != '\0')
+	{
+		if (((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
+					+ 1] == '<')) && ft_tell_if_oq(s, i, k) == 1 && i > 0 && s[i
+			- 1] != ' ')
+			add++;
+		else if (ft_is_spc_chr(s[i]) == 1 && ft_tell_if_oq(s, i, k) == 1
+			&& i > 0 && s[i - 1] != ' ')
+			add++;
+		else if (s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>') || (s[i
+					- 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
+			&& ft_tell_if_oq(s, i - 2, k) == 1)
+			add++;
+		else if (s[i] != ' ' && ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
+			&& ft_tell_if_oq(s, i - 1, k) == 1)
+			add++;
+		if ((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
+				+ 1] == '<'))
+			i = i + 2;
+		else
+			i++;
+	}
+	return (add);
+}
+
+char	*new_input(char *s, int len)
+{
+	int		i;
+	char	*new_str;
+	int		cnt_ns;
+	int		k;
+
+	new_str = malloc(sizeof(char) * len + 1);
+	if (!new_str)
+	{
+		printf("String has not been created (Error)");
+		exit(0);
+	}
+	k = 0;
+	i = 0;
+	cnt_ns = 0;
+	while (s[i] != '\0')
+	{
+		if (((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
+			+ 1] == '<')) && ft_tell_if_oq(s, i, k) == 1 && i > 0 && s[i - 1] \
+			!= ' ')
+			new_str[cnt_ns++] = ' ';
+		else if (ft_is_spc_chr(s[i]) == 1 && ft_tell_if_oq(s, i, k) == 1
+			&& i > 0 && s[i - 1] != ' ')
+			new_str[cnt_ns++] = ' ';
+		else if (s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>') 
+			|| (s[i - 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
+			&& ft_tell_if_oq(s, i - 2, k) == 1)
+			new_str[cnt_ns++] = ' ';
+		else if (s[i] != ' ' && ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
+			&& ft_tell_if_oq(s, i - 1, k) == 1)
+			new_str[cnt_ns++] = ' ';
+		new_str[cnt_ns] = s[i];
+		if ((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i + 1] == '<'))
+		{
+			i++;
+			cnt_ns++;
+			new_str[cnt_ns] = s[i];
+		}
+		i++;
+		cnt_ns++;
+	}
+	new_str[cnt_ns] = '\0';
+	return (new_str);
+}
+
+
+#include "../include/minishell.h"
+
+int	ft_only_spaces(char *input)
+{
+	int	i;
+
+	i = 0;
+	while (input[i] != '\0' && input[i] != '\t')
+	{
+		if (input[i] != ' ')
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+void	history(char *input)
+{
+	if (input != NULL && ft_strlen(input) != 0 && ft_only_spaces(input) == 0)
+		add_history(input);
+}
+
+void	init_data(t_data *data, char **env)
+{
+	data->env = copy_alloc_array(env);
+	data->array_var = copy_alloc_array(env);
+	sort_strings(data->array_var, array_len(data->array_var));
+	data->input = NULL;
+	data->cmd_list = NULL;
+	data->exit_status = 0;
+	data->token_list = NULL;
+	data->here_doc_counter = 0;
+	data->prs.ptrdata = data;
+	ft_init_parsing_struc(&data->prs);
+	//data-> pipe = NULL;
+}
+void    free_data(t_data *data)
+{
+	//Está por rellenar
+	if(data->env)
+		free_array(data->env);
+	if(data->array_var)
+		free_array(data->array_var);
+	if(data->cmd_list)
+		free_cmd_list(data->cmd_list);
+	if(data->token_list)
+		free_token_list(data->token_list);
+    if (data->input)
+		free(data->input);
+	if (data->prs.arr_lexems)
+		free_array(data->prs.arr_lexems);
+	close_fds();
+}
+void reboot_data(t_data *data)
+{
+	if(data->input)
+		free(data->input);
+	if(data->cmd_list)
+		data->cmd_list = free_cmd_list(data->cmd_list);
+	if(data->token_list)
+		data->token_list = free_token_list(data->token_list);
+	if (data->prs.arr_lexems)
+		free_array(data->prs.arr_lexems);	
+	data->input = NULL;
+	data->cmd_list = NULL;
+	data->token_list = NULL;
+	data->exit_status = 0;
+	data->here_doc_counter = 0;
+	ft_init_parsing_struc(&data->prs);
+	close_fds();
+}
+
+void	ft_printf_proofs_split_prs(t_data data)
+{
+	int count;
+
+	count = 0;
+	while(count < data.prs.how_much)
+	{
+		printf("string número %i es: %s\n", count, data.prs.arr_lexems[count]);
+		count++;
+	}
+}
+
+int	main(int argc, char** argv, char **env)
+{
+	t_data	data;
+	int exit_status;
+
+	(void)argc; 
+	(void)argv;
+	init_data(&data, env);
+	signals();
+	while (1)
+	{
+		data.input = readline("MiniShell> ");
+		if (data.input == NULL)
+			break ;
+		history(data.input);
+		ft_parsing(&data);
+		if(data.exit_status == 0 && data.prs.flag_space == 'g')
+		{
+			//prueba_ejecucion(&data);
+			ft_printf_proofs_split_prs(data);
+		}
+		reboot_data(&data);
+	}
+	exit_status = data.exit_status; //esto es para que cuando hagamos ctrl+d el exit status sea el que corresponda
+    free_data(&data);
+	printf("exit\n");
+	return (exit_status);
+}

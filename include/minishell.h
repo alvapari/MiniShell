@@ -96,6 +96,7 @@ typedef struct s_data
 {
 	char				**env;
 	char				*input;
+	char				*in_ax;
 	char				**array_var;
 	int					exit_status;
 	t_token				*token_list;
@@ -238,6 +239,12 @@ void					ft_move_counts(t_parsing	*prs);
 void					ft_string_by_string_aux(char *str, t_parsing *prs);
 void					ft_printf_proofs_split_prs(t_data data); /*Que NO se nos olvide quitar esto LOL*/
 void					ft_parsing(t_data *data);
+char					*new_input(char *s, int len);
+int						ft_len(char *s, int k);
+int						ft_tell_if_oq(char *str, int index, int i);
+int						ft_is_spc_chr(char str);
+char					*ft_new_input(char *s, int len);
+
 
 // PATH
 char					*get_path_line(char **env);

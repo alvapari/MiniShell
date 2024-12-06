@@ -1,3 +1,4 @@
+
 #include "../include/minishell.h"
 
 int	ft_only_spaces(char *input)
@@ -26,6 +27,7 @@ void	init_data(t_data *data, char **env)
 	data->array_var = copy_alloc_array(env);
 	sort_strings(data->array_var, array_len(data->array_var));
 	data->input = NULL;
+	data->in_ax = NULL;
 	data->cmd_list = NULL;
 	data->exit_status = 0;
 	data->token_list = NULL;
@@ -55,6 +57,8 @@ void reboot_data(t_data *data)
 {
 	if(data->input)
 		free(data->input);
+	if(data->in_ax)
+		free(data->in_ax);	
 	if(data->cmd_list)
 		data->cmd_list = free_cmd_list(data->cmd_list);
 	if(data->token_list)

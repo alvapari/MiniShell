@@ -6,13 +6,14 @@
 /*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/13 00:02:28 by alvapari          #+#    #+#             */
-/*   Updated: 2024/11/21 13:16:43 by alvapari         ###   ########.fr       */
+/*   Updated: 2024/12/06 19:05:53 by alvapari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
 // Esta función inicializa al estructura que vamos a necesitar para el parseo
+
 void	ft_init_parsing_struc(t_parsing *prs)
 {
 	prs->count = 0;
@@ -33,16 +34,20 @@ void	ft_init_parsing_struc(t_parsing *prs)
 // válido del input (cualquier carácter menos un espacio).
 void	ft_parsing(t_data *data)
 {
-	int	top;
+	int		top;
+	int		new_len;
 
-	top = ft_strlen(data->input) - 1;
-	if (ft_only_spaces(data->input) == 1)
+	new_len = ft_len(data->input, 0) + ft_strlen(data->input);
+	data->in_ax = ft_new_input(data->input, new_len);
+	printf("a ver: data input %s\n", data->in_ax);
+	top = ft_strlen(data->in_ax) - 1;
+	if (ft_only_spaces(data->in_ax) == 1)
 		ft_print_prs_err('s', &data->prs);
 	else
 	{
-		while (data->input[top] == ' ')
+		while (data->in_ax[top] == ' ')
 			top--;
-		ft_start_parsing(data->input, &data->prs, top);
+		ft_start_parsing(data->in_ax, &data->prs, top);
 	}
 }
 
@@ -76,7 +81,7 @@ void	ft_start_parsing(char *str, t_parsing *prs, int top)
 	if (prs->flag != 0)
 		ft_print_prs_err('u', prs);
 	else
-		ft_create_arr_lexem(prs->ptrdata->input, prs);
+		ft_create_arr_lexem(prs->ptrdata->in_ax, prs);
 }
 
 /*es una extensión de la función how_mux_lem:  cuando llegamos a las comillas,
