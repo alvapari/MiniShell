@@ -6,7 +6,7 @@
 /*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 10:31:20 by alvapari          #+#    #+#             */
-/*   Updated: 2024/12/06 19:17:38 by alvapari         ###   ########.fr       */
+/*   Updated: 2024/12/09 18:00:57 by alvapari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 // esta función nos dirá si un carácter concreto (index) de una string está o
 // no está en estado de comillas. Si está FUERA de comillas devolverá 1, si
 // está dentro de comillas devolverá 0
+// en general todo este archivo consigue que se separen los carácteres 
+// especiales de otros lexemas.
 
 int	ft_is_spc_chr(char str)
 {
@@ -23,11 +25,10 @@ int	ft_is_spc_chr(char str)
 	return (0);
 }
 
-int	ft_tell_if_oq(char *str, int index, int i)
+int	ft_tell_if_oq(char *str, int index, int i, int flag)
 {
-	int	flag;
-
-	flag = 0;
+	if (index < 0)
+		return (0);
 	while (str[i] != '\0' && i <= index)
 	{
 		if (str[i] == DOUB_QUOT)
@@ -45,40 +46,31 @@ int	ft_tell_if_oq(char *str, int index, int i)
 				flag = 0;
 		}
 		if ((i == index) && flag == 0)
-			return (1);
+			return (0);
 		i++;
 	}
-	return (0);
+	return (1);
 }
 
-int	ft_len(char *s, int k)
+int	ft_len(char *s, int k, int i, int add)
 {
-	int	i;
-	int	add;
-
-	k = 0;
-	i = 0;
-	add = 0;
-	if (!s) 
-        return (0);
+	if (!s)
+		return (0);
 	while (s[i] != '\0')
 	{
-		if (((i > 0 && s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
-					+ 1] == '<')) && ft_tell_if_oq(s, i, k) == 1 && s[i
-			- 1] != ' ')
-			add++;
-		else if (i > 0 && ft_is_spc_chr(s[i]) == 1 && ft_tell_if_oq(s, i, k) == 1
-			&& s[i - 1] != ' ')
-			add++;
-		else if (i >= 2 && s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>') || (s[i
-					- 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
-			&& ft_tell_if_oq(s, i - 2, k) == 1)
-			add++;
-		else if (i >= 1 && s[i] != ' ' && ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
-			&& ft_tell_if_oq(s, i - 1, k) == 1)
+		if (((i > 0 && ((s[i] == '>' && s[i + 1] == '>')
+						|| (s[i] == '<' && s[i + 1] == '<')))
+				&& ft_tell_if_oq(s, i, k, 0) == 0
+				&& s[i - 1] != ' ') || (i > 0 && ft_is_spc_chr(s[i]) == 1
+				&& ft_tell_if_oq(s, i, k, 0) == 0 && s[i - 1] != ' ') || (i >= 2
+				&& s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>')
+					|| (s[i - 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
+				&& ft_tell_if_oq(s, i - 2, k, 0) == 0) || (i >= 1 && s[i] != ' '
+				&& ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
+				&& ft_tell_if_oq(s, i - 1, k, 0) == 0))
 			add++;
 		if ((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
-				+ 1] == '<'))
+					+ 1] == '<'))
 			i += 2;
 		else
 			i++;
@@ -86,41 +78,43 @@ int	ft_len(char *s, int k)
 	return (add);
 }
 
-
 char	*ft_new_input(char *s, int len)
 {
 	int		i;
 	char	*new_str;
 	int		cnt_ns;
-	int		k;
 
+	i = 0;
+	cnt_ns = 0;
 	new_str = malloc(sizeof(char) * len + 1);
 	if (!new_str)
 	{
 		printf("String has not been created (Error)");
 		exit(0);
 	}
-	k = 0;
-	i = 0;
-	cnt_ns = 0;
+	new_str = ft_new_input_aux(s, new_str, i, cnt_ns);
+	new_str[len] = '\0';
+	return (new_str);
+}
+
+char	*ft_new_input_aux(char *s, char *new_str, int i, int cnt_ns)
+{
 	while (s[i] != '\0')
 	{
-		if (((i > 0 && s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
-			+ 1] == '<')) && ft_tell_if_oq(s, i, k) == 1 && s[i - 1] \
-			!= ' ')
-			new_str[cnt_ns++] = ' ';
-		else if (i > 0 && ft_is_spc_chr(s[i]) == 1 && ft_tell_if_oq(s, i, k) == 1
-			&& s[i - 1] != ' ')
-			new_str[cnt_ns++] = ' ';
-		else if (i >= 2 && s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>') 
-			|| (s[i - 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
-			&& ft_tell_if_oq(s, i - 2, k) == 1)
-			new_str[cnt_ns++] = ' ';
-		else if (i >= 1 && s[i] != ' ' && ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
-			&& ft_tell_if_oq(s, i - 1, k) == 1)
+		if (((i > 0 && ((s[i] == '>' && s[i + 1] == '>')
+						|| (s[i] == '<' && s[i + 1] == '<')))
+				&& ft_tell_if_oq(s, i, 0, 0) == 0
+				&& s[i - 1] != ' ') || (i > 0 && ft_is_spc_chr(s[i]) == 1
+				&& ft_tell_if_oq(s, i, 0, 0) == 0 && s[i - 1] != ' ') || (i >= 2
+				&& s[i] != ' ' && ((s[i - 2] == '>' && s[i - 1] == '>')
+					|| (s[i - 2] == '<' && s[i - 1] == '<')) && s[i] != '\0'
+				&& ft_tell_if_oq(s, i - 2, 0, 0) == 0) || (i >= 1 && s[i] != ' '
+				&& ft_is_spc_chr(s[i - 1]) == 1 && s[i] != '\0'
+				&& ft_tell_if_oq(s, i - 1, 0, 0) == 0))
 			new_str[cnt_ns++] = ' ';
 		new_str[cnt_ns] = s[i];
-		if ((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i + 1] == '<'))
+		if ((s[i] == '>' && s[i + 1] == '>') || (s[i] == '<' && s[i
+					+ 1] == '<'))
 		{
 			i++;
 			cnt_ns++;
@@ -129,7 +123,5 @@ char	*ft_new_input(char *s, int len)
 		i++;
 		cnt_ns++;
 	}
-	new_str[len] = '\0';
 	return (new_str);
 }
-

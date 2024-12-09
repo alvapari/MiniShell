@@ -6,7 +6,7 @@
 /*   By: alvapari <alvapari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/18 13:31:03 by alvapari          #+#    #+#             */
-/*   Updated: 2024/11/21 12:53:19 by alvapari         ###   ########.fr       */
+/*   Updated: 2024/12/08 12:29:30 by alvapari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,7 @@ void	ft_split_strings(char *str, t_parsing *prs)
 		prs->init_index++;
 	}
 	prs->arr_lexems[prs->index_arr][prs->cnt_new_str] = '\0';
+	ft_check_if_csp(str, prs);
 }
 
 /*esta función es una extensión de ft_split_strings: si es una comilla de

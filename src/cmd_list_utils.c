@@ -30,6 +30,7 @@ t_cmd *add_cmd(t_cmd *cmd_list, t_cmd *new_cmd)
 	new_cmd->index = cmd_list_len(cmd_list)- 1;
 	return (cmd_list);
 }
+
 t_cmd *get_last_cmd(t_cmd *cmd_list)
 {
 	t_cmd *p;

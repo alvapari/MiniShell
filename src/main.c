@@ -36,6 +36,7 @@ void	init_data(t_data *data, char **env)
 	ft_init_parsing_struc(&data->prs);
 	//data-> pipe = NULL;
 }
+
 void    free_data(t_data *data)
 {
 	//Está por rellenar
@@ -53,6 +54,7 @@ void    free_data(t_data *data)
 		free_array(data->prs.arr_lexems);
 	close_fds();
 }
+
 void reboot_data(t_data *data)
 {
 	if(data->input)
@@ -112,5 +114,6 @@ int	main(int argc, char** argv, char **env)
 	exit_status = data.exit_status; //esto es para que cuando hagamos ctrl+d el exit status sea el que corresponda
     free_data(&data);
 	printf("exit\n");
+	rl_clear_history();
 	return (exit_status);
 }

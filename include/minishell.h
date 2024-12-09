@@ -240,11 +240,16 @@ void					ft_string_by_string_aux(char *str, t_parsing *prs);
 void					ft_printf_proofs_split_prs(t_data data); /*Que NO se nos olvide quitar esto LOL*/
 void					ft_parsing(t_data *data);
 char					*new_input(char *s, int len);
-int						ft_len(char *s, int k);
-int						ft_tell_if_oq(char *str, int index, int i);
+int						ft_len(char *s, int k, int i, int add);
+int						ft_tell_if_oq(char *str, int index, int i, int flag);
 int						ft_is_spc_chr(char str);
 char					*ft_new_input(char *s, int len);
-
+void    				ft_init_cnt_sc(t_parsing *prs);
+void    				ft_check_if_csp(char *str, t_parsing *prs);
+void   					ft_check_if_csp_aux(char *str, t_parsing *prs);
+void    				ft_realloc_prs_o(t_parsing *prs);
+void    				ft_realloc_prs_t(t_parsing *prs);
+char					*ft_new_input_aux(char *s, char *new_str, int i, int cnt_ns);
 
 // PATH
 char					*get_path_line(char **env);
