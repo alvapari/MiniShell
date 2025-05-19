@@ -1,4 +1,3 @@
-# ---------------------------> DEVELOPING <---------------------------
 
 
 ## MiniShell
@@ -19,6 +18,5 @@ los conceptos anteriores a un nivel de complejidad superior.
 - **Comportamiento en bash**
 - **Makefile:** compilación (con flags -Well -Wextra -Werror, archivos .h)
 
-### Es un proyecto por parejas que realizo junto a mi compañero <a href="https://github.com/Noa42" target="_blank">A. Chacón</a>
+### Es un proyecto por parejas que he realizado junto a mi compañero <a href="https://github.com/Noa42" target="_blank">A. Chacón</a>
 
-# ---------------------------> DEVELOPING <---------------------------
